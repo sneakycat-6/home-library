@@ -1,0 +1,44 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+.dialog {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  background: var(--surface2);
+  border-radius: var(--radius);
+}
+.section h3 { font-size: 0.95rem; }
+.hint { font-size: 0.82rem; color: var(--text-muted); }
+.fileLabel { display: flex; }
+.status {
+  font-size: 0.85rem;
+  color: var(--success);
+  padding: 0.75rem;
+  background: var(--surface2);
+  border-radius: var(--radius);
+}

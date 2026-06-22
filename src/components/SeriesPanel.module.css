@@ -1,0 +1,66 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-height: 85dvh;
+  overflow-y: auto;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.seriesName { font-size: 1.1rem; font-weight: 600; color: var(--accent); }
+.hint { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem; }
+.bookList {
+  margin-top: 0.75rem;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+.current { color: var(--accent); font-weight: 600; }
+.next {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: var(--surface2);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  border-left: 3px solid var(--accent);
+}
+.noSeries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.error { color: var(--danger); font-size: 0.85rem; }
+.suggestion {
+  padding: 0.75rem;
+  background: var(--surface2);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.suggestionActions { display: flex; gap: 0.5rem; }
+.seriesInfo { display: flex; flex-direction: column; gap: 0.25rem; }
