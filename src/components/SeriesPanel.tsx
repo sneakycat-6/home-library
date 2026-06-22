@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Book } from '../types'
 import { useLibrary } from '../context/LibraryContext'
-import { getSeriesSuggestion } from '../lib/series/openLibrary'
+import { getSeriesSuggestion, OpenLibraryError } from '../lib/series/openLibrary'
 import styles from './SeriesPanel.module.css'
 
 interface Props {
@@ -42,8 +42,12 @@ export function SeriesPanel({ book, onClose }: Props) {
       } else {
         setError('No series found on Open Library for this book.')
       }
-    } catch {
-      setError('Failed to reach Open Library. Check your internet connection.')
+    } catch (e) {
+      setError(
+        e instanceof OpenLibraryError
+          ? e.message
+          : 'Failed to reach Open Library. Check your internet connection.',
+      )
     } finally {
       setLoading(false)
     }

@@ -26,6 +26,15 @@ export interface BookSearchHit {
 
 const SEARCH_FIELDS =
   'key,title,author_name,isbn,series,series_number,first_publish_year,cover_i'
+const REQUEST_TIMEOUT_MS = 20_000
+const OPEN_LIBRARY_SEARCH = 'https://openlibrary.org/search.json'
+
+export class OpenLibraryError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'OpenLibraryError'
+  }
+}
 
 function pickIsbn13(isbns?: string[]): string | undefined {
   if (!isbns?.length) return undefined
@@ -57,12 +66,12 @@ function docToSearchHit(doc: OLSearchDoc): BookSearchHit {
   }
 }
 
-export async function searchOpenLibrary(query: {
+function buildSearchParams(query: {
   title?: string
   author?: string
   isbn?: string
   limit?: number
-}): Promise<OLSearchDoc[]> {
+}): URLSearchParams {
   const params = new URLSearchParams()
   if (query.isbn?.trim()) {
     params.set('isbn', query.isbn.trim())
@@ -72,12 +81,81 @@ export async function searchOpenLibrary(query: {
   }
   params.set('fields', SEARCH_FIELDS)
   params.set('limit', String(query.limit ?? 5))
+  return params
+}
 
-  const url = `https://openlibrary.org/search.json?${params.toString()}`
-  const res = await fetch(url)
-  if (!res.ok) return []
-  const data: OLSearchResult = await res.json()
-  return data.docs ?? []
+function fetchViaJsonp(url: string): Promise<OLSearchResult> {
+  return new Promise((resolve, reject) => {
+    const callbackName = `openLibraryCb_${Date.now()}_${Math.random().toString(36).slice(2)}`
+    const script = document.createElement('script')
+    let settled = false
+
+    const cleanup = () => {
+      script.remove()
+      delete (window as unknown as Record<string, unknown>)[callbackName]
+      clearTimeout(timer)
+    }
+
+    const finish = (fn: () => void) => {
+      if (settled) return
+      settled = true
+      cleanup()
+      fn()
+    }
+
+    ;(window as unknown as Record<string, unknown>)[callbackName] = (data: OLSearchResult) => {
+      finish(() => resolve(data))
+    }
+
+    script.onerror = () => {
+      finish(() =>
+        reject(
+          new OpenLibraryError(
+            'Open Library was blocked by the browser (often an ad blocker or privacy extension).',
+          ),
+        ),
+      )
+    }
+
+    const timer = window.setTimeout(() => {
+      finish(() => reject(new OpenLibraryError('Open Library request timed out.')))
+    }, REQUEST_TIMEOUT_MS)
+
+    const separator = url.includes('?') ? '&' : '?'
+    script.src = `${url}${separator}callback=${callbackName}`
+    document.head.appendChild(script)
+  })
+}
+
+async function fetchSearchResult(url: string): Promise<OLSearchResult> {
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
+    if (res.ok) {
+      return (await res.json()) as OLSearchResult
+    }
+  } catch {
+    // Fall back to JSONP for CORS/network failures.
+  }
+
+  return fetchViaJsonp(url)
+}
+
+export async function searchOpenLibrary(query: {
+  title?: string
+  author?: string
+  isbn?: string
+  limit?: number
+}): Promise<OLSearchDoc[]> {
+  const params = buildSearchParams(query)
+  const url = `${OPEN_LIBRARY_SEARCH}?${params.toString()}`
+
+  try {
+    const data = await fetchSearchResult(url)
+    return data.docs ?? []
+  } catch (e) {
+    if (e instanceof OpenLibraryError) throw e
+    throw new OpenLibraryError('Could not reach Open Library.')
+  }
 }
 
 export async function searchBooks(query: {
