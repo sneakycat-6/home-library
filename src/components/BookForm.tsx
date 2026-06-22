@@ -1,7 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import type { Book, BookFormat, BookStatus } from '../types'
 import { useLibrary } from '../context/LibraryContext'
-import { searchBooks, OpenLibraryError, type BookSearchHit } from '../lib/series/openLibrary'
+import {
+  searchBooksOnline,
+  BookSearchError,
+  isGoogleBooksConfigured,
+  type BookSearchHit,
+} from '../lib/books/search'
 import styles from './BookForm.module.css'
 
 interface Props {
@@ -49,21 +54,21 @@ export function BookForm({ initial, onClose }: Props) {
     setSearchResults([])
     setSelectedHitId(null)
     try {
-      const results = await searchBooks({
+      const results = await searchBooksOnline({
         title: title.trim() || undefined,
         author: authors.trim() || undefined,
         isbn: isbn13.trim() || undefined,
       })
       if (results.length === 0) {
-        setSearchError('No matching books found on Open Library.')
+        setSearchError('No matching books found.')
       } else {
         setSearchResults(results)
       }
     } catch (e) {
       const message =
-        e instanceof OpenLibraryError
+        e instanceof BookSearchError
           ? e.message
-          : 'Could not reach Open Library. Please try again.'
+          : 'Could not search for books. Please try again.'
       setSearchError(message)
     } finally {
       setSearching(false)
@@ -142,7 +147,9 @@ export function BookForm({ initial, onClose }: Props) {
               {searching ? 'Searching…' : 'Search online'}
             </button>
             <span className={styles.hint}>
-              Uses title, author, and ISBN to find matches on Open Library
+              {isGoogleBooksConfigured()
+                ? 'Searches Google Books and Open Library using title, author, and ISBN'
+                : 'Searches Open Library. Add a Google Books API key to search Google too.'}
             </span>
             {searchError && <p className={styles.searchError}>{searchError}</p>}
             {searchResults.length > 0 && (
@@ -162,7 +169,12 @@ export function BookForm({ initial, onClose }: Props) {
                         <div className={styles.searchCoverPlaceholder}>📖</div>
                       )}
                       <span className={styles.searchHitBody}>
-                        <span className={styles.searchHitTitle}>{hit.title}</span>
+                        <span className={styles.searchHitTitleRow}>
+                          <span className={styles.searchHitTitle}>{hit.title}</span>
+                          <span className={styles.searchSource}>
+                            {hit.source === 'google' ? 'Google' : 'Open Library'}
+                          </span>
+                        </span>
                         <span className={styles.searchHitMeta}>
                           {hit.authors.join(', ') || 'Unknown author'}
                           {hit.firstPublishYear != null && ` · ${hit.firstPublishYear}`}

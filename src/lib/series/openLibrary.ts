@@ -1,3 +1,5 @@
+import type { BookSearchHit } from '../books/types'
+
 export interface OLSearchDoc {
   key: string
   title: string
@@ -12,16 +14,6 @@ export interface OLSearchDoc {
 export interface OLSearchResult {
   numFound: number
   docs: OLSearchDoc[]
-}
-
-export interface BookSearchHit {
-  id: string
-  title: string
-  authors: string[]
-  isbn13?: string
-  coverUrl?: string
-  seriesNumber?: number
-  firstPublishYear?: number
 }
 
 const SEARCH_FIELDS =
@@ -56,7 +48,8 @@ function docToSearchHit(doc: OLSearchDoc): BookSearchHit {
   const numStr = doc.series_number?.[0]
   const seriesNumber = numStr ? parseFloat(numStr) : undefined
   return {
-    id: doc.key,
+    id: `openlibrary:${doc.key}`,
+    source: 'openlibrary',
     title: doc.title,
     authors: doc.author_name ?? [],
     isbn13: pickIsbn13(doc.isbn),
@@ -158,7 +151,7 @@ export async function searchOpenLibrary(query: {
   }
 }
 
-export async function searchBooks(query: {
+export async function searchOpenLibraryBooks(query: {
   title?: string
   author?: string
   isbn?: string
