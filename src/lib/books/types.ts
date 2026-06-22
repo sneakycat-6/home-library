@@ -1,8 +1,5 @@
-export type BookSearchSource = 'google' | 'openlibrary'
-
 export interface BookSearchHit {
   id: string
-  source: BookSearchSource
   title: string
   authors: string[]
   isbn13?: string

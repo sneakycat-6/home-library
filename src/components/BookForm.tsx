@@ -3,10 +3,10 @@ import type { Book, BookFormat, BookStatus } from '../types'
 import { useLibrary } from '../context/LibraryContext'
 import {
   searchBooksOnline,
-  BookSearchError,
+  GoogleBooksError,
   isGoogleBooksConfigured,
   type BookSearchHit,
-} from '../lib/books/search'
+} from '../lib/books/googleBooks'
 import styles from './BookForm.module.css'
 
 interface Props {
@@ -60,15 +60,15 @@ export function BookForm({ initial, onClose }: Props) {
         isbn: isbn13.trim() || undefined,
       })
       if (results.length === 0) {
-        setSearchError('No matching books found.')
+        setSearchError('No matching books found on Google Books.')
       } else {
         setSearchResults(results)
       }
     } catch (e) {
       const message =
-        e instanceof BookSearchError
+        e instanceof GoogleBooksError
           ? e.message
-          : 'Could not search for books. Please try again.'
+          : 'Could not search Google Books. Please try again.'
       setSearchError(message)
     } finally {
       setSearching(false)
@@ -142,14 +142,14 @@ export function BookForm({ initial, onClose }: Props) {
               type="button"
               className="btn-ghost"
               onClick={handleSearch}
-              disabled={searching || !canSearch}
+              disabled={searching || !canSearch || !isGoogleBooksConfigured()}
             >
-              {searching ? 'Searching…' : 'Search online'}
+              {searching ? 'Searching…' : 'Search Google Books'}
             </button>
             <span className={styles.hint}>
               {isGoogleBooksConfigured()
-                ? 'Searches Google Books and Open Library using title, author, and ISBN'
-                : 'Searches Open Library. Add a Google Books API key to search Google too.'}
+                ? 'Uses title, author, and ISBN to search Google Books'
+                : 'Google Books API key is required. Set VITE_GOOGLE_BOOKS_API_KEY (see README).'}
             </span>
             {searchError && <p className={styles.searchError}>{searchError}</p>}
             {searchResults.length > 0 && (
@@ -169,12 +169,7 @@ export function BookForm({ initial, onClose }: Props) {
                         <div className={styles.searchCoverPlaceholder}>📖</div>
                       )}
                       <span className={styles.searchHitBody}>
-                        <span className={styles.searchHitTitleRow}>
-                          <span className={styles.searchHitTitle}>{hit.title}</span>
-                          <span className={styles.searchSource}>
-                            {hit.source === 'google' ? 'Google' : 'Open Library'}
-                          </span>
-                        </span>
+                        <span className={styles.searchHitTitle}>{hit.title}</span>
                         <span className={styles.searchHitMeta}>
                           {hit.authors.join(', ') || 'Unknown author'}
                           {hit.firstPublishYear != null && ` · ${hit.firstPublishYear}`}
