@@ -72,3 +72,94 @@
   gap: 0.75rem;
   margin-top: 0.5rem;
 }
+
+.searchSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.searchError {
+  color: var(--danger);
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.searchResults {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+}
+
+.searchHit,
+.searchHitSelected {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-align: left;
+  color: var(--text);
+}
+
+.searchHit:hover {
+  border-color: var(--accent);
+}
+
+.searchHitSelected {
+  border-color: var(--accent);
+  background: var(--surface2);
+}
+
+.searchCover {
+  width: 40px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.searchCoverPlaceholder {
+  width: 40px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--border);
+  border-radius: 4px;
+  flex-shrink: 0;
+  font-size: 1.2rem;
+}
+
+.searchHitBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.searchHitTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.searchHitMeta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

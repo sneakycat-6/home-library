@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import type { Book, BookFormat, BookStatus } from '../types'
 import { useLibrary } from '../context/LibraryContext'
+import { searchBooks, type BookSearchHit } from '../lib/series/openLibrary'
 import styles from './BookForm.module.css'
 
 interface Props {
@@ -13,9 +14,12 @@ const FORMATS: BookFormat[] = ['kindle', 'paper', 'both']
 
 export function BookForm({ initial, onClose }: Props) {
   const { saveBook } = useLibrary()
+  const isNew = !initial
+
   const [title, setTitle] = useState(initial?.title ?? '')
   const [authors, setAuthors] = useState(initial?.authors.join(', ') ?? '')
   const [isbn13, setIsbn13] = useState(initial?.isbn13 ?? '')
+  const [coverUrl, setCoverUrl] = useState(initial?.coverUrl ?? '')
   const [status, setStatus] = useState<BookStatus>(initial?.status ?? 'owned')
   const [formats, setFormats] = useState<BookFormat[]>(initial?.formats ?? [])
   const [rating, setRating] = useState<string>(String(initial?.rating ?? ''))
@@ -25,10 +29,52 @@ export function BookForm({ initial, onClose }: Props) {
   )
   const [saving, setSaving] = useState(false)
 
+  const [searching, setSearching] = useState(false)
+  const [searchError, setSearchError] = useState<string | null>(null)
+  const [searchResults, setSearchResults] = useState<BookSearchHit[]>([])
+  const [selectedHitId, setSelectedHitId] = useState<string | null>(null)
+
+  const canSearch = Boolean(title.trim() || authors.trim() || isbn13.trim())
+
   function toggleFormat(f: BookFormat) {
     setFormats((prev) =>
       prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f],
     )
+  }
+
+  async function handleSearch() {
+    if (!canSearch) return
+    setSearching(true)
+    setSearchError(null)
+    setSearchResults([])
+    setSelectedHitId(null)
+    try {
+      const results = await searchBooks({
+        title: title.trim() || undefined,
+        author: authors.trim() || undefined,
+        isbn: isbn13.trim() || undefined,
+      })
+      if (results.length === 0) {
+        setSearchError('No matching books found on Open Library.')
+      } else {
+        setSearchResults(results)
+      }
+    } catch {
+      setSearchError('Could not reach Open Library. Check your internet connection.')
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  function applySearchHit(hit: BookSearchHit) {
+    setTitle(hit.title)
+    setAuthors(hit.authors.join(', '))
+    setIsbn13(hit.isbn13 ?? '')
+    setCoverUrl(hit.coverUrl ?? '')
+    if (hit.seriesNumber != null) {
+      setSeriesNumber(String(hit.seriesNumber))
+    }
+    setSelectedHitId(hit.id)
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -44,6 +90,7 @@ export function BookForm({ initial, onClose }: Props) {
           .map((a) => a.trim())
           .filter(Boolean),
         isbn13: isbn13.trim() || undefined,
+        coverUrl: coverUrl.trim() || undefined,
         status,
         formats,
         rating: rating ? parseInt(rating, 10) : undefined,
@@ -79,6 +126,52 @@ export function BookForm({ initial, onClose }: Props) {
           ISBN-13
           <input value={isbn13} onChange={(e) => setIsbn13(e.target.value)} placeholder="9781234567890" />
         </label>
+
+        {isNew && (
+          <div className={styles.searchSection}>
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={handleSearch}
+              disabled={searching || !canSearch}
+            >
+              {searching ? 'Searching…' : 'Search online'}
+            </button>
+            <span className={styles.hint}>
+              Uses title, author, and ISBN to find matches on Open Library
+            </span>
+            {searchError && <p className={styles.searchError}>{searchError}</p>}
+            {searchResults.length > 0 && (
+              <ul className={styles.searchResults}>
+                {searchResults.map((hit) => (
+                  <li key={hit.id}>
+                    <button
+                      type="button"
+                      className={
+                        selectedHitId === hit.id ? styles.searchHitSelected : styles.searchHit
+                      }
+                      onClick={() => applySearchHit(hit)}
+                    >
+                      {hit.coverUrl ? (
+                        <img src={hit.coverUrl} alt="" className={styles.searchCover} />
+                      ) : (
+                        <div className={styles.searchCoverPlaceholder}>📖</div>
+                      )}
+                      <span className={styles.searchHitBody}>
+                        <span className={styles.searchHitTitle}>{hit.title}</span>
+                        <span className={styles.searchHitMeta}>
+                          {hit.authors.join(', ') || 'Unknown author'}
+                          {hit.firstPublishYear != null && ` · ${hit.firstPublishYear}`}
+                          {hit.isbn13 && ` · ${hit.isbn13}`}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         <label>
           Status
