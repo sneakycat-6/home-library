@@ -33,9 +33,11 @@ npm run preview    # preview the production build locally
    gh repo create home-library --public --source=. --remote=origin --push
    ```
 
-2. In your repo on GitHub: **Settings → Pages → Source → GitHub Actions**
+2. In your repo on GitHub: **Settings → Pages → Build and deployment → Source → GitHub Actions**
 
-3. Any push to `main` triggers the deploy workflow automatically.
+   If the site is blank after a successful workflow run, Pages is probably still serving the **repository root** (unbuilt source). Either switch the source to **GitHub Actions**, or set **Deploy from a branch** to the `gh-pages` branch and `/ (root)`.
+
+3. Any push to `master` triggers the deploy workflow automatically.
 
 Live URL: `https://<your-username>.github.io/home-library/`
 
