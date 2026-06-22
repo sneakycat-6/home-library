@@ -1,5 +1,7 @@
 import type { BookSearchHit, BookSearchQuery } from './types'
 
+export type { BookSearchHit, BookSearchQuery } from './types'
+
 const GOOGLE_BOOKS_API = 'https://www.googleapis.com/books/v1/volumes'
 const REQUEST_TIMEOUT_MS = 20_000
 
@@ -74,8 +76,7 @@ function volumeToHit(volume: GoogleBooksVolume): BookSearchHit | null {
   if (!info?.title?.trim()) return null
 
   return {
-    id: `google:${volume.id}`,
-    source: 'google',
+    id: volume.id,
     title: info.title.trim(),
     authors: info.authors ?? [],
     isbn13: pickIsbn13(info.industryIdentifiers),
@@ -121,4 +122,8 @@ export async function searchGoogleBooks(query: BookSearchQuery): Promise<BookSea
   return (data.items ?? [])
     .map(volumeToHit)
     .filter((hit): hit is BookSearchHit => hit != null)
+}
+
+export async function searchBooksOnline(query: BookSearchQuery): Promise<BookSearchHit[]> {
+  return searchGoogleBooks(query)
 }

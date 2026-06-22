@@ -6,8 +6,8 @@ A personal library tracker — runs entirely in your browser via IndexedDB. Depl
 
 - Track books you **own** (Kindle / paper / both), are **reading**, have **read**, or **want to read**
 - **Goodreads CSV import** with smart merge (matches on ISBN-13, falls back to title + author)
-- **Online book search** when adding books — Google Books (with API key) and Open Library
-- **Series lookup** via Open Library — auto-detects which book in a series you have and shows what's next
+- **Google Books search** when adding books (requires API key)
+- **Series tracking** — link books to a series and see reading order in your library
 - **JSON export / import** for backups and future server migration
 - Fully offline after first load (IndexedDB storage)
 
@@ -15,13 +15,13 @@ A personal library tracker — runs entirely in your browser via IndexedDB. Depl
 
 ```bash
 npm install
-cp .env.example .env.local   # optional: Google Books API key
+cp .env.example .env.local   # Google Books API key
 npm run dev        # http://localhost:5173/home-library/
 ```
 
-## Google Books API (optional)
+## Google Books API
 
-Book search can query **Google Books** in addition to Open Library. You need a free API key from [Google Cloud Console](https://console.cloud.google.com/):
+Book search uses **Google Books**. You need a free API key from [Google Cloud Console](https://console.cloud.google.com/):
 
 1. Create a project (or pick an existing one)
 2. Enable **Books API**
@@ -38,8 +38,6 @@ VITE_GOOGLE_BOOKS_API_KEY=your_key_here
 ```
 
 **GitHub Pages deploy:** add a repository secret named `GOOGLE_BOOKS_API_KEY` with the same value. The deploy workflow passes it into the build automatically. Re-run the deploy workflow (or push a commit) after adding the secret.
-
-Without a key, search still works via Open Library only.
 
 ## Build
 
@@ -74,8 +72,7 @@ src/
 ├── lib/
 │   ├── storage/      StorageProvider interface + IndexedDB impl + API stub
 │   ├── goodreads/    CSV parser + merge logic
-│   ├── books/        Google Books + unified online search
-│   └── series/       Open Library lookup + next-in-series
+│   ├── books/        Google Books search
 ├── types/            Book, Series types
 └── App.tsx
 .github/workflows/deploy-pages.yml
