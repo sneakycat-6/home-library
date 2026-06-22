@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import type { Book, BookFormat, BookStatus } from '../types'
 import { useLibrary } from '../context/LibraryContext'
-import { searchBooks, type BookSearchHit } from '../lib/series/openLibrary'
+import { searchBooks, OpenLibraryError, type BookSearchHit } from '../lib/series/openLibrary'
 import styles from './BookForm.module.css'
 
 interface Props {
@@ -59,8 +59,12 @@ export function BookForm({ initial, onClose }: Props) {
       } else {
         setSearchResults(results)
       }
-    } catch {
-      setSearchError('Could not reach Open Library. Check your internet connection.')
+    } catch (e) {
+      const message =
+        e instanceof OpenLibraryError
+          ? e.message
+          : 'Could not reach Open Library. Please try again.'
+      setSearchError(message)
     } finally {
       setSearching(false)
     }
